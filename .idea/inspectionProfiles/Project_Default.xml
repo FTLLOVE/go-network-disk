@@ -27,6 +27,8 @@
         <method importPath="os" receiver="*File" name="Seek" />
         <method importPath="net/http" receiver="*Request" name="ParseForm" />
         <method importPath="net/http" receiver="ResponseWriter" name="Write" />
+        <method importPath="database/sql" receiver="*DB" name="Close" />
+        <method importPath="database/sql" receiver="*Stmt" name="Close" />
       </methods>
     </inspection_tool>
   </profile>

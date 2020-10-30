@@ -12,6 +12,8 @@ func main() {
 	http.HandleFunc("/file/upload/success", handler.UploadSuccessHandler)
 	http.HandleFunc("/file/meta", handler.GetFileMetaHandler)
 	http.HandleFunc("/file/download", handler.DownloadHandler)
+	http.HandleFunc("/file/update", handler.UpdateFileMetaHandler)
+	http.HandleFunc("/file/delete", handler.DeleteFilemetaHandler)
 
 	err := http.ListenAndServe(":8091", nil)
 	if err != nil {

@@ -50,10 +50,11 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		newFile.Seek(0, 0)
 		fileMeta.FileSha1 = util.FileSha1(newFile)
-		meta.UpdateFileMeta(fileMeta)
-		http.Redirect(w, r, "/file/upload/success", http.StatusFound)
-	} else {
-
+		if ok := fileMeta.UpdateFileMetaDB(); !ok {
+			w.Write([]byte("update fail"))
+		} else {
+			http.Redirect(w, r, "/file/upload/success", http.StatusFound)
+		}
 	}
 }
 
@@ -66,7 +67,14 @@ func UploadSuccessHandler(w http.ResponseWriter, r *http.Request) {
 func GetFileMetaHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	s := r.Form["filehash"][0]
-	fileMeta := meta.GetFileMeta(s)
+	f := &meta.FileMeta{
+		FileSha1: s,
+	}
+	fileMeta, err := f.GetFileMetaDB()
+	if err != nil {
+		log.Printf("f.GetFileMetaDB fail,err: %v \n", err.Error())
+		return
+	}
 	data, err := json.Marshal(fileMeta)
 	if err != nil {
 		log.Printf("json.Marshal fail,err: %v \n", err.Error())
@@ -80,7 +88,14 @@ func GetFileMetaHandler(w http.ResponseWriter, r *http.Request) {
 func DownloadHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	s := r.Form["filehash"][0]
-	fileMeta := meta.GetFileMeta(s)
+	fm := &meta.FileMeta{
+		FileSha1: s,
+	}
+	fileMeta, err := fm.GetFileMetaDB()
+	if err != nil {
+		log.Printf("fm.GetFileMetaDB fail,err: %v \n", err.Error())
+		return
+	}
 	file, err := os.Open(fileMeta.Location)
 	if err != nil {
 		log.Printf("os.Open fail,err: %v \n", err.Error())
@@ -97,4 +112,37 @@ func DownloadHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/octect-stream")
 	w.Header().Set("Content-disposition", "attachement;filename=\""+fileMeta.FileName+"\"")
 	w.Write(data)
+}
+
+// UpdateFileMetaHandler: 更新文件元
+func UpdateFileMetaHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	op := r.Form.Get("op")
+	//filehash := r.Form.Get("filehash")
+	//newFilename := r.Form.Get("filename")
+	if op != "0" {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	if r.Method == http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	//fileMeta := meta.GetFileMeta(filehash)
+	//fileMeta.FileName = newFilename
+	//meta.UpdateFileMeta(fileMeta)
+	w.WriteHeader(http.StatusOK)
+}
+
+// DeleteFilemetaHandler: 删除文件元信息
+func DeleteFilemetaHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	//filehash := r.Form.Get("filehash")
+	//fileMeta := meta.GetFileMeta(filehash)
+	//os.Remove(fileMeta.Location)
+	//
+	//meta.DeleteFileMeta(filehash)
+	w.WriteHeader(http.StatusOK)
 }
